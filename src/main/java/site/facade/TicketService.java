@@ -1,6 +1,6 @@
 package site.facade;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

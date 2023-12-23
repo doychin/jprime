@@ -1,6 +1,7 @@
 package site.repository;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Repository(value = SessionRepository.NAME)
 @RepositoryRestResource(path = "sessions")
-public interface SessionRepository extends PagingAndSortingRepository<Session, Long> {
+public interface SessionRepository extends PagingAndSortingRepository<Session, Long>, CrudRepository<Session, Long> {
 
     String NAME = "sessionRepository";
 

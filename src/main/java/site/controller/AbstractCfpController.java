@@ -1,6 +1,6 @@
 package site.controller;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.function.Function;

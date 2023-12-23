@@ -1,6 +1,6 @@
 package site.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * A person visiting the conference.

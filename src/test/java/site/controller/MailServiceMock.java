@@ -2,7 +2,6 @@ package site.controller;
 
 import site.facade.MailService;
 
-import javax.mail.MessagingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +15,7 @@ class MailServiceMock extends MailService {
     String lastMessageText;
     
     @Override
-    public void sendEmail(String to, String subject, String messageText)
-            throws MessagingException {
+    public void sendEmail(String to, String subject, String messageText) {
         recipientAddresses.add(to);
         lastMessageText = messageText;
     }

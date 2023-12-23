@@ -12,7 +12,7 @@ import site.facade.AdminService;
 import site.model.Session;
 import site.model.Submission;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 

@@ -1,5 +1,6 @@
 package site.repository;
 
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import site.model.Sponsor;
@@ -7,9 +8,10 @@ import site.model.Sponsor;
 import java.util.List;
 
 @Repository(value = SponsorRepository.NAME)
-public interface SponsorRepository extends PagingAndSortingRepository<Sponsor, Long> {
+public interface SponsorRepository
+    extends PagingAndSortingRepository<Sponsor, Long>, CrudRepository<Sponsor, Long> {
 
-	String NAME = "sponsorRepository";
+    String NAME = "sponsorRepository";
 
     List<Sponsor> findAll();
 

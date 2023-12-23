@@ -1,6 +1,7 @@
 package site.repository;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import site.model.Branch;
@@ -13,7 +14,7 @@ import java.util.Optional;
  * Created by mitia on 28.04.15.
  */
 @Repository(value = VisitorRepository.NAME)
-public interface VisitorRepository extends PagingAndSortingRepository<Visitor, Long> {
+public interface VisitorRepository extends PagingAndSortingRepository<Visitor, Long>, CrudRepository<Visitor, Long> {
 
 
     String NAME = "visitorRepository";

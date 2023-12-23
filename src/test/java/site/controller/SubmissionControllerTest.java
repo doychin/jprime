@@ -62,7 +62,7 @@ class SubmissionControllerTest {
     private Submission bootAddon;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         final SubmissionController bean = wac.getBean(SubmissionController.class);
         this.mailer = new MailServiceMock();
         bean.setMailFacade(mailer);
@@ -169,7 +169,7 @@ class SubmissionControllerTest {
     			findByBranchAndStatus(Globals.CURRENT_BRANCH, SubmissionStatus.SUBMITTED));
     	String length = Long.toString(exportSubmissions.length());
     	
-    	mockMvc.perform(get("/admin/submission/exportCSV/"))
+    	mockMvc.perform(get("/admin/submission/exportCSV"))
     	.andExpect(status().isOk())
     	.andExpect(header().string("Content-Length", length));
     	

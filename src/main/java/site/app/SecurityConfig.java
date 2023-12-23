@@ -1,7 +1,7 @@
 package site.app;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,97 +27,122 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import site.model.User;
 import site.repository.SpeakerRepository;
 import site.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Autowired
-    public ApplicationContext context;
 
-    @Autowired
-    private Environment environment;
+    public final ApplicationContext context;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final Environment environment;
 
-    @Autowired
-    private SpeakerRepository speakerRepository;
+    private final UserRepository userRepository;
 
-    @Bean
-    WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> {
-            web
-                .ignoring()
-                .antMatchers("/asset/**")
-                .antMatchers("/assets/**")
-                .antMatchers("/css/**")
-                .antMatchers("/fonts/**")
-                .antMatchers("/images/**")
-                .antMatchers("/js/**");
-        };
+    private final SpeakerRepository speakerRepository;
+
+    public SecurityConfig(ApplicationContext context, Environment environment, UserRepository userRepository,
+        SpeakerRepository speakerRepository) {
+        this.context = context;
+        this.environment = environment;
+        this.userRepository = userRepository;
+        this.speakerRepository = speakerRepository;
     }
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) {
-	        auth.authenticationProvider(new AuthenticationProvider() {
-	            @Override
-	            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-	                String email = (String) authentication.getPrincipal();
-	                String providedPassword = (String) authentication.getCredentials();
-	                
-	                //admin hack
-	                if("admin".equals(email) && providedPassword.equals(environment.getProperty("admin.password"))){
-	                	return new UsernamePasswordAuthenticationToken(email, providedPassword, Collections.singleton(new SimpleGrantedAuthority("ADMIN")));
-	                }
-	                
-	                User user = userRepository.findUserByEmail(email);
-	                if (user == null) {
-                        user = speakerRepository.findByEmail(email);
-                        if (StringUtils.isEmpty(user.getPassword())) {
-                            user = null;
-                        }
+        auth.authenticationProvider(new AuthenticationProvider() {
+
+            @Override
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                String email = (String) authentication.getPrincipal();
+                String providedPassword = (String) authentication.getCredentials();
+
+                //admin hack
+                if ("admin".equals(email) && providedPassword.equals(
+                    environment.getProperty("admin.password"))) {
+                    return new UsernamePasswordAuthenticationToken(email, providedPassword,
+                        Collections.singleton(new SimpleGrantedAuthority("ADMIN")));
+                }
+
+                User user = userRepository.findUserByEmail(email);
+                if (user == null) {
+                    user = speakerRepository.findByEmail(email);
+                    if (StringUtils.isEmpty(user.getPassword())) {
+                        user = null;
                     }
+                }
 
-	                if (user == null || !passwordEncoder().matches(providedPassword, user.getPassword())) {
-	                    throw new BadCredentialsException("Username/Password does not match for " + authentication.getPrincipal());
-	                }
-	                
-	                return new UsernamePasswordAuthenticationToken(email, providedPassword, Collections.singleton(new SimpleGrantedAuthority("USER")));
-	            }
+                if (user == null || !passwordEncoder().matches(providedPassword, user.getPassword())) {
+                    throw new BadCredentialsException(
+                        "Username/Password does not match for " + authentication.getPrincipal());
+                }
 
-	            @Override
-	            public boolean supports(Class<?> authentication) {
-	                return true;
-	            }
-	        });
+                return new UsernamePasswordAuthenticationToken(email, providedPassword,
+                    Collections.singleton(new SimpleGrantedAuthority("USER")));
+            }
+
+            @Override
+            public boolean supports(Class<?> authentication) {
+                return true;
+            }
+        });
+    }
+
+    private RequestMatcher[] antMatcher(String... patterns) {
+        return Stream.of(patterns).map(AntPathRequestMatcher::antMatcher).toArray(RequestMatcher[]::new);
+    }
+
+    private RequestMatcher[] antMatcher(HttpMethod httpMethod, String... patterns) {
+        return Stream.of(patterns)
+            .map(pattern -> AntPathRequestMatcher.antMatcher(httpMethod, pattern))
+            .toArray(RequestMatcher[]::new);
     }
 
     @Bean
     SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
-        http
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                .and()
-                .csrf().disable()
-                .authorizeRequests()
-                        //TODO Mihail: "/" only works if tomcat/conf/web.xml has index.jsp commented as a welcome page
-                        //TODO if not, the controller will not be called and the jsp is not going to have any model object filled up.
-                .antMatchers("/", "/login", "/about", "/nav/**", "/cfp", "/cfp-thank-you",  "/privacy-policy", "/signup", "/resetPassword","/createNewPassword", "/successfulPasswordChange", "/image/**", "/tickets/**", "/team","/venue","/speaker/**","/speakers", "/agenda/**", "/404", "/captcha-image", "/pwa", "/pwa/**", "/qr/**").permitAll() // #4
-                .antMatchers(HttpMethod.GET, "/halls", "/halls/**", "/sessions", "/sessions/**", "/submissions", "/submissions/**", "/sw.js", "/manifest.json").permitAll()
-                .antMatchers("/admin/**").hasAuthority("ADMIN") // #6
-                .antMatchers("/raffle/**").hasAuthority("ADMIN") // #7
-                .antMatchers("/api/**").hasAuthority("ADMIN") // #7
-                .antMatchers("/user/**").hasAuthority("USER") //will contain schedule and etc
-                .anyRequest().authenticated() // 8
-                .and()
-                .formLogin().successHandler(SecurityConfig::redirectToAdmin) // #9
-                .loginPage("/login") // #10
-                .permitAll();
+        http.sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+            .and()
+            .csrf()
+            .disable()
+            .authorizeHttpRequests()
+            .requestMatchers(
+                antMatcher("/", "/login", "/about", "/nav/**", "/cfp", "/cfp-thank-you", "/privacy-policy",
+                    "/signup", "/resetPassword", "/createNewPassword", "/successfulPasswordChange",
+                    "/image/**", "/tickets/**", "/team", "/venue", "/speaker/**", "/speakers", "/agenda/**",
+                    "/404", "/captcha-image", "/pwa", "/pwa/**", "/qr/**", "/asset/**", "/assets/**",
+                    "/css/**", "/fonts/**", "/images/**", "/js/**"))
+            .permitAll()
+            .requestMatchers(
+                antMatcher(HttpMethod.GET, "/halls", "/halls/**", "/sessions", "/sessions/**", "/submissions",
+                    "/submissions/**", "/sw.js", "/manifest.json"))
+            .permitAll()
+            .requestMatchers(antMatcher("/admin/**"))
+            .hasAuthority("ADMIN") // #6
+            .requestMatchers(antMatcher("/raffle/**"))
+            .hasAuthority("ADMIN") // #7
+            .requestMatchers(antMatcher("/api/**"))
+            .hasAuthority("ADMIN") // #7
+            .requestMatchers(antMatcher("/user/**"))
+            .hasAuthority("USER") //will contain schedule and etc
+            .anyRequest()
+            .authenticated()  // 8
+            .and()
+            .formLogin()
+            .successHandler(SecurityConfig::redirectToAdmin) // #9
+            .loginPage("/login") // #10
+            .permitAll();
         return http.build(); // #5
     }
 
@@ -127,7 +152,8 @@ public class SecurityConfig {
             return;
         }
 
-        boolean isAdmin = authentication.getAuthorities().stream().anyMatch(p-> "ADMIN".equals(p.getAuthority()));
+        boolean isAdmin =
+            authentication.getAuthorities().stream().anyMatch(p -> "ADMIN".equals(p.getAuthority()));
         if (isAdmin) {
             new DefaultRedirectStrategy().sendRedirect(request, response, "/admin");
         }

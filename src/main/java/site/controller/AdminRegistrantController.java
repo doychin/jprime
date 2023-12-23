@@ -26,7 +26,7 @@ import site.model.Registrant;
 import site.model.Visitor;
 import site.model.VisitorStatus;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import site.facade.AdminService;
 import site.model.User;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * @author Ivan St. Ivanov

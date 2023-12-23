@@ -1,5 +1,6 @@
 package site.repository;
 
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,7 @@ import site.model.Branch;
 import site.model.Registrant;
 
 @Repository(value = RegistrantRepository.NAME)
-public interface RegistrantRepository extends PagingAndSortingRepository<Registrant, Long> {
+public interface RegistrantRepository extends PagingAndSortingRepository<Registrant, Long>, CrudRepository<Registrant, Long> {
 
 	String NAME = "registrantRepository";
 //    String SELECT_ARTICLES_BY_TAG_STMT = "SELECT a FROM Article a JOIN a.tags t WHERE t.name = :tagName and a.published=true";

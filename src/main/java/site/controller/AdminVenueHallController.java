@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import site.facade.AdminService;
 import site.model.VenueHall;
 
-import javax.transaction.Transactional;
-import javax.validation.Valid;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 /**
  * @author Ivan St. Ivanov

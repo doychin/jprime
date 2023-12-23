@@ -16,8 +16,8 @@ import site.facade.MailService;
 import site.facade.RegistrantService;
 import site.model.Registrant;
 
-import javax.transaction.Transactional;
-import javax.validation.Valid;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 import java.io.IOException;
 import java.nio.file.Files;

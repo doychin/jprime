@@ -16,7 +16,7 @@ import site.facade.AdminService;
 import site.model.Article;
 import site.model.User;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 
