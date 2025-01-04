@@ -81,7 +81,8 @@ public class BranchService {
     }
 
     private boolean preloadBranches() {
-        if (branchRepository.findByYear(2015).getStartDate() != null) {
+        Branch branch2015 = branchRepository.findByYear(2015);
+        if (branch2015 != null && branch2015.getStartDate() != null) {
             return false;
         }
 

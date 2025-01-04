@@ -1,76 +1,94 @@
 package site.app;
 
-import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(jsr250Enabled = true)
+@ConditionalOnProperty(prefix = "jprime", name = "security.enabled", havingValue = "true",
+    matchIfMissing = true)
 public class SecurityConfig {
 
-    public final ApplicationContext context;
+    interface AuthoritiesConverter extends Converter<Map<String, Object>, Collection<GrantedAuthority>> {}
 
-    public SecurityConfig(ApplicationContext context) {
-        this.context = context;
+    @SuppressWarnings("unchecked")
+    @Bean
+    AuthoritiesConverter realmRolesAuthoritiesConverter() {
+        return claims -> {
+            var realmAccess = Optional.ofNullable((Map<String, Object>) claims.get("realm_access"));
+            var roles = realmAccess.flatMap(map -> Optional.ofNullable((List<String>) map.get("roles")));
+            return roles.stream()
+                .flatMap(Collection::stream)
+                .map(SimpleGrantedAuthority::new)
+                .map(GrantedAuthority.class::cast)
+                .toList();
+        };
     }
 
     @Bean
-    SecurityFilterChain filterChain(final HttpSecurity http, final AuthenticationProvider provider)
-        throws Exception {
+    GrantedAuthoritiesMapper authenticationConverter(
+        Converter<Map<String, Object>, Collection<GrantedAuthority>> authoritiesConverter) {
+        return authorities -> authorities.stream()
+            .filter(OidcUserAuthority.class::isInstance)
+            .map(OidcUserAuthority.class::cast)
+            .map(OidcUserAuthority::getIdToken)
+            .map(OidcIdToken::getClaims)
+            .map(authoritiesConverter::convert)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+    }
+
+    @Bean
+    SecurityFilterChain filterChain(final HttpSecurity http,
+        final ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
             .csrf(AbstractHttpConfigurer::disable)
             .cors(AbstractHttpConfigurer::disable)
-            .authenticationProvider(provider)
             .authorizeHttpRequests(requests -> {
-                requests.requestMatchers("/admin/**", "/raffle/**", "/api/**", "/user/**")
-                    .hasAuthority("ADMIN");
-
                 requests.requestMatchers(HttpMethod.GET, "/halls/**", "/sessions/**", "/submissions/**")
                     .permitAll();
-
                 requests.requestMatchers("/assets/**", "/css/**", "/fonts/**", "/images/**", "/js/**",
                     "/nav/**", "/image/**", "/tickets/**", "/speaker/**", "/agenda/**", "/pwa/**", "/qr/**",
                     "/*").permitAll();
 
+                requests.requestMatchers("/admin/**", "/raffle/**").hasAuthority("Administrator");
+                requests.requestMatchers("/api/**").hasAuthority("Tickets");
             });
 
-        http.formLogin(loginForm -> loginForm.successHandler(SecurityConfig::redirectToAdmin)
-            .loginPage("/login")
-            .permitAll());
+        http.oauth2Login(Customizer.withDefaults());
+
+        http.logout(logout -> {
+            var logoutSuccessHandler =
+                new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+            logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/");
+            logout.logoutSuccessHandler(logoutSuccessHandler);
+            logout.invalidateHttpSession(true);
+        });
+
         return http.build(); // #5
-    }
-
-    private static void redirectToAdmin(HttpServletRequest request, HttpServletResponse response,
-        Authentication authentication) throws IOException {
-        if (response.isCommitted()) {
-            return;
-        }
-
-        boolean isAdmin =
-            authentication.getAuthorities().stream().anyMatch(p -> "ADMIN".equals(p.getAuthority()));
-        if (isAdmin) {
-            new DefaultRedirectStrategy().sendRedirect(request, response, "/admin");
-        }
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
