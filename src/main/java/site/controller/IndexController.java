@@ -59,7 +59,7 @@ public class IndexController {
         model.addAttribute("featuredSpeakers", userFacade.findFeaturedSpeakers());
 
         // split partners in groups for better display in rows
-        List<Partner> officialSupporterPartners = userFacade.findAllActiveOfficalSupportingPartners();
+        List<Partner> officialSupporterPartners = userFacade.findAllActiveOfficialSupportingPartners();
         Collections.shuffle(officialSupporterPartners);
         List<List<Partner>> officialSupporterPartnersChunks = getPartnerChunks(officialSupporterPartners);
         model.addAttribute("officialSupporterPartnersChunks", officialSupporterPartnersChunks);
@@ -99,7 +99,7 @@ public class IndexController {
         model.addAttribute("student_ticket_price", String.format("%.2f",prices.get(TicketType.STUDENT).getPrice()));
 
         model.addAttribute("cfp_close_date", DateUtils.dateToStringWithMonthAndYear(currentBranch.getCfpCloseDate()));
-        model.addAttribute("cfp_closed", currentBranch.getCfpCloseDate().isAfter(LocalDateTime.now()));
+        model.addAttribute("cfp_closed", currentBranch.getCfpCloseDate().isBefore(LocalDateTime.now()));
 
         // 30th and 31st of May 2023
         LocalDateTime startDate = currentBranch.getStartDate();

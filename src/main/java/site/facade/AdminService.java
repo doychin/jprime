@@ -214,12 +214,24 @@ public class AdminService {
         return submissionRepository.findAllByBranch(branch, pageable);
     }
 
+    public Page<Submission> findAllSubmissionsForBranchAndStatus(Branch branch, SubmissionStatus status, Pageable pageable) {
+        return submissionRepository.findByBranchAndStatus(branch,status, pageable);
+    }
+
     public Submission findOneSubmission(Long submissionId) {
         return submissionRepository.findById(submissionId).get();
     }
 
     public void acceptSubmission(Submission submission) {
         changeStatusTo(submission, SubmissionStatus.ACCEPTED);
+    }
+
+    public void confirmSubmission(Submission submission) {
+        changeStatusTo(submission, SubmissionStatus.CONFIRMED);
+    }
+
+    public void cancelSubmission(Submission submission) {
+        changeStatusTo(submission, SubmissionStatus.CANCELED);
     }
 
     public void rejectSubmission(Submission submission) {
@@ -235,8 +247,8 @@ public class AdminService {
         submissionRepository.save(submission);
     }
 
-    public List<Submission> findAllAcceptedSubmissionsForBranch(Branch branch) {
-        return submissionRepository.findByBranchAndStatus(branch, SubmissionStatus.ACCEPTED);
+    public List<Submission> findAllConfirmedSubmissionsForBranch(Branch branch) {
+        return submissionRepository.findByBranchAndStatus(branch, SubmissionStatus.CONFIRMED);
     }
 
     public List<Submission> findAllSubmittedSubmissionsForCurrentBranch() {
@@ -438,5 +450,14 @@ public class AdminService {
         backgroundJobs.addAll(jobRepository.findPendingJobs());
         backgroundJobs.addAll(jobRepository.findCompletedJobs(LocalDateTime.now().minusHours(8)));
         return backgroundJobs;
+    }
+
+    public List<SubmissionByStatus> countSubmissionsByStatusForBranch(Branch branch) {
+        return submissionRepository.countSubmissionsByStatusForBranch(branch);
+    }
+
+    public Session detachSession(Session session) {
+        entityManager.detach(session);
+        return session;
     }
 }
