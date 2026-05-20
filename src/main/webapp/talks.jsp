@@ -50,7 +50,7 @@
                 <h2>${talk.submission.title}</h2>
                 <c:if test="${not agenda}"><p>The agenda is not yet available </p></c:if>
                 <c:if test="${agenda}"><p>The agenda for jPrime <fmt:formatDate pattern="YYYY" value="${firstDayDate}" /> is now available!</p>
-                <p>You can track the agenda from your mobile phone also from our PWA app available at <a href="/app">https://jprime.io/app</a></p>
+                <p>You can track the agenda from your mobile phone from our PWA app available at <a href="/app">https://jprime.io/app</a></p> or <a href="https://play.google.com/store/apps/details?id=com.jprime.mobile">Google Play Store</a>
                     <div class="entry-content">
                         <style>
                             table{
