@@ -11,7 +11,7 @@
     "java.import.maven.disableTestClasspathFlag": true,
     "java.implementationCodeLens": false,
     "java.referencesCodeLens.enabled": false,
-    "java.inlayHints.parameterNames.enabled": "none",
+    "java.inlayHints.parameterNames.enabled": "all",
     "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx3000m -Xms128m -Xlog:disable",
     // "java.compile.nullAnalysis.nonnull": ["org.jspecify.annotations.NonNull"],
     "java.maven.downloadSources": true,
