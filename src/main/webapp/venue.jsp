@@ -77,7 +77,7 @@
                                 <img alt="" src="/images/apt.png"/><br/><br/>
 
                                 <div class="member-name"><b>Transport</b><br/><br/>
-                                    <b>Conference hall address</b>: Tsarigradsko Shosse 115B, Sofia, Bulgaria<br/>
+                                    <b>Conference hall address</b>: Tsarigradsko Shosse 111B, Sofia, Bulgaria<br/>
                                     Sofia Tech Park is located 6 km away from the Sofia International Airport.<br/>
                                     It usually takes up to 10 min to reach the venue with a car.<br/>
                                     <br/>
