@@ -10,7 +10,7 @@
                     <i class="icon-home"></i>
                     <div class="contact-info">
                         <h3>Location</h3>
-                        <p><a href="https://goo.gl/maps/67NtDSTADcG2" style="color: white">Tsarigradsko Shosse 115B, Sofia, Bulgaria</a></p>
+                        <p><a href="https://goo.gl/maps/67NtDSTADcG2" style="color: white">Tsarigradsko Shosse 111B, Sofia, Bulgaria</a></p>
                     </div>
                 </div>
             </div>
